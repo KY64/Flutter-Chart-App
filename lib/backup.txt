@@ -1,0 +1,125 @@
+import 'dart:math' show Random;
+import 'dart:async' show Timer;
+
+import 'package:flutter/material.dart';
+import 'package:charts_flutter/flutter.dart' as charts;
+
+void main() => runApp(new MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return new MaterialApp(
+      title: 'Flutter Demo',
+      theme: new ThemeData(
+        primarySwatch: Colors.deepPurple,
+      ),
+      home: new MyHomePage(title: 'Flutter Demo Home Page'),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  MyHomePage({Key key, this.title}) : super(key: key);
+
+  final String title;
+
+  @override
+  _MyHomePageState createState() => new _MyHomePageState();
+}
+
+class VoltageData {
+  final int year;
+  int clicks = 0;
+  final charts.Color color;
+
+  VoltageData(this.year, this.clicks, Color color)
+      : this.color = new charts.Color(
+            r: color.red, g: color.green, b: color.blue, a: color.alpha);
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  int counter = 0;
+  bool start = false;
+  List<VoltageData> data = [];
+
+  @override
+  void initState() {
+    data = [
+      VoltageData(-6,Random().nextInt(100), Colors.teal),
+      VoltageData(-5,Random().nextInt(100), Colors.teal),
+      VoltageData(-4,Random().nextInt(100), Colors.teal),
+      VoltageData(-3,Random().nextInt(100), Colors.teal),
+      VoltageData(-2,Random().nextInt(100), Colors.teal),
+      VoltageData(-1,Random().nextInt(100), Colors.teal),
+    ];
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    List<charts.Series<VoltageData, num>> series = [
+      new charts.Series(
+        domainFn: (VoltageData clickData, _) => clickData.year,
+        measureFn: (VoltageData clickData, _) => clickData.clicks,
+        colorFn: (VoltageData clickData, _) => clickData.color,
+        id: 'Volt',
+        data: data,
+      )
+    ];
+    var chart = new charts.LineChart(
+      series,
+      animate: true,
+      domainAxis: new charts.NumericAxisSpec(
+          // Set the initial viewport by providing a new AxisSpec with the
+          // desired viewport, in NumericExtents.
+          viewport: new charts.NumericExtents(counter - 6, counter)),
+      // Optionally add a pan or pan and zoom behavior.
+      // If pan/zoom is not added, the viewport specified remains the viewport.
+      behaviors: [new charts.PanAndZoomBehavior()],
+    );
+
+    var chartWidget = new Padding(
+      padding: new EdgeInsets.all(32.0),
+      child: new SizedBox(
+        height: 200.0,
+        child: chart,
+      ),
+    );
+
+    return new Scaffold(
+      appBar: new AppBar(
+        title: new Text(widget.title),
+      ),
+      body: new Center(child: chartWidget),
+      backgroundColor: Colors.deepPurple,
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: FloatingActionButton(
+              onPressed: () {
+                if (!start) {
+                  start = true;
+                  Timer.periodic(Duration(seconds: 1), (timer) {
+                    setState(() {
+                      counter++;
+                      data.add(VoltageData(counter,
+                          Random().nextInt(100), Colors.teal));
+                      if (data.length > 15) data.removeAt(0);
+                    });
+                  });
+                }
+              },
+              child: Icon(
+                Icons.play_arrow,
+              ),
+              backgroundColor: Colors.red,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
